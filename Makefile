@@ -8,15 +8,23 @@ all: server client thin-client crs
 
 server:
 	docker build \
+		--build-arg ONEC_VERSION=${ONEC_VERSION} \
+		--build-arg ONESCRIPT_PACKAGES="yard" \
+		-t ${DOCKER_REGISTRY_URL}/oscript-downloader:yard \
+		-f oscript/Dockerfile \
+		"."
+
+	docker build \
 		--build-arg ONEC_USERNAME=${ONEC_USERNAME} \
 		--build-arg ONEC_PASSWORD=${ONEC_PASSWORD} \
 		--build-arg ONEC_VERSION=${ONEC_VERSION} \
 		--build-arg DOCKER_REGISTRY_URL=${DOCKER_REGISTRY_URL} \
-   		--build-arg BASE_IMAGE=${BASE_IMAGE} \
-    	--build-arg BASE_TAG=${BASE_TAG} \
+   		--build-arg DOWNLOADER_IMAGE=${DOCKER_REGISTRY_URL}/oscript-downloader:yard \
 		-t ${DOCKER_REGISTRY_URL}/onec-server:${ONEC_VERSION} \
-		-f server/Dockerfile .
-	docker tag ${DOCKER_REGISTRY_URL}/onec-server:${ONEC_VERSION} ${DOCKER_REGISTRY_URL}/onec-server:latest
+		-f server/Dockerfile \
+		"."
+	
+	# docker tag ${DOCKER_REGISTRY_URL}/onec-server:${ONEC_VERSION} ${DOCKER_REGISTRY_URL}/onec-server:latest
 
 edt:
 	docker build \

@@ -1,6 +1,6 @@
 ARG DOCKER_REGISTRY_URL=library
-ARG BASE_IMAGE=debian
-ARG BASE_TAG=bullseye-slim
+ARG BASE_IMAGE=ubuntu
+ARG BASE_TAG=20.04
 
 FROM ${DOCKER_REGISTRY_URL}/${BASE_IMAGE}:${BASE_TAG}
 
@@ -15,7 +15,9 @@ RUN apt-get update \
       wget \
   && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF \
   && echo "deb http://download.mono-project.com/repo/debian stable-buster main" > /etc/apt/sources.list.d/mono-official-stable.list \
-  && apt-get update \
+  && apt-get clean
+
+RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
     mono-runtime \
     ca-certificates-mono \
@@ -27,8 +29,9 @@ RUN apt-get update \
   && rm -rf  \
     /var/lib/apt/lists/* \
     /var/cache/debconf \
-    /tmp/*
-
+    /tmp/* \
+  && apt-get clean
+  
 # remove DST Root CA X3 cert if it exists
 COPY ./scripts/remove-dst-root-ca-x3.sh /remove-dst-root-ca-x3.sh
 RUN chmod +x /remove-dst-root-ca-x3.sh \
@@ -63,5 +66,3 @@ RUN opm install opm \
 COPY ./oscript/docker-entrypoint.sh /
 RUN chmod 755 /docker-entrypoint.sh \
   && chmod +x /docker-entrypoint.sh
-
-ENTRYPOINT ["/docker-entrypoint.sh"]

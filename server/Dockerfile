@@ -1,8 +1,7 @@
 # Используем базовый образ для скачивания
 ARG DOCKER_REGISTRY_URL
-ARG BASE_IMAGE
-ARG BASE_TAG
-FROM ${DOCKER_REGISTRY_URL}/${BASE_IMAGE}:${BASE_TAG} as downloader
+ARG DOWNLOADER_IMAGE
+FROM ${DOWNLOADER_IMAGE} as downloader
 
 # Копирование скрипта скачивания и локальных дистрибутивов
 COPY ./scripts/download_yard.sh /download.sh
@@ -118,7 +117,10 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 RUN apt-get update && apt-get install -yq procps
 RUN chmod +x /opt/1cv8/current/ragent
 
-# Настройка точки входа и экспонирование портов
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-EXPOSE 1540 1541 1545 1560
-CMD ["ragent"]
+# Добавление пути к 1С в PATH
+RUN echo 'export PATH=$PATH:/opt/1cv8/x86_64/8.3.23.2040' >> /root/.bashrc
+
+# # Настройка точки входа и экспонирование портов
+# ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+# EXPOSE 1540 1541 1545 1560
+# CMD ["ragent"]
