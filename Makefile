@@ -7,12 +7,28 @@ VERSION ?= latest
 all: server client thin-client crs
 
 server:
-	docker build --build-arg ONEC_USERNAME=${ONEC_USERNAME} \
+	docker build \
+		--build-arg ONEC_USERNAME=${ONEC_USERNAME} \
 		--build-arg ONEC_PASSWORD=${ONEC_PASSWORD} \
 		--build-arg ONEC_VERSION=${ONEC_VERSION} \
+		--build-arg DOCKER_REGISTRY_URL=${DOCKER_REGISTRY_URL} \
+   		--build-arg BASE_IMAGE=${BASE_IMAGE} \
+    	--build-arg BASE_TAG=${BASE_TAG} \
 		-t ${DOCKER_REGISTRY_URL}/onec-server:${ONEC_VERSION} \
 		-f server/Dockerfile .
 	docker tag ${DOCKER_REGISTRY_URL}/onec-server:${ONEC_VERSION} ${DOCKER_REGISTRY_URL}/onec-server:latest
+
+edt:
+	docker build \
+		--build-arg ONEC_USERNAME=${ONEC_USERNAME} \
+		--build-arg ONEC_PASSWORD=${ONEC_PASSWORD} \
+		--build-arg EDT_VERSION="${EDT_VERSION}" \
+		--build-arg DOWNLOADER_REGISTRY_URL=${DOCKER_REGISTRY_URL} \
+		--build-arg DOWNLOADER_IMAGE=oscript-downloader \
+		--build-arg DOWNLOADER_TAG=latest \
+		-t ${DOCKER_REGISTRY_URL}/edt:${EDT_VERSION} \
+		-f edt/Dockerfile \
+		.
 
 server-nls:
 	docker build --build-arg ONEC_USERNAME=${ONEC_USERNAME} \
