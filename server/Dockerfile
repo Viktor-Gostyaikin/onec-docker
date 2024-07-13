@@ -1,7 +1,11 @@
 # Используем базовый образ для скачивания
 ARG DOCKER_REGISTRY_URL
 ARG DOWNLOADER_IMAGE
+
+ARG OS_INSTALLER_TYPE
+
 FROM ${DOWNLOADER_IMAGE} as downloader
+
 
 # Копирование скрипта скачивания и локальных дистрибутивов
 COPY ./scripts/download_yard.sh /download.sh
@@ -39,9 +43,10 @@ FROM ubuntu:20.04 as installer
 ARG ONEC_VERSION
 ARG gosu_ver=1.11
 ARG nls_enabled=false
+ARG OS_INSTALLER_TYPE=server
 ENV nls=$nls_enabled
 ENV distrPath=/tmp/downloads/Platform83/${ONEC_VERSION}
-ENV installer_type=server
+ENV installer_type=${OS_INSTALLER_TYPE}
 
 # Установка зависимостей и настройка локали
 RUN apt-get update \
@@ -62,7 +67,9 @@ RUN apt-get update \
 
 COPY ./scripts/install_new.sh /install.sh
 COPY --from=downloader /tmp/ /tmp/
+
 WORKDIR ${distrPath}
+
 RUN ls . \
   && chmod +x /install.sh \
   && sync; /install.sh

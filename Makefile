@@ -6,13 +6,15 @@ VERSION ?= latest
 
 all: server client thin-client crs
 
-server:
+yard:
 	docker build \
 		--build-arg ONEC_VERSION=${ONEC_VERSION} \
 		--build-arg ONESCRIPT_PACKAGES="yard" \
 		-t ${DOCKER_REGISTRY_URL}/oscript-downloader:yard \
 		-f oscript/Dockerfile \
-		"."
+		"."	
+server:
+	make yard
 
 	docker build \
 		--build-arg ONEC_USERNAME=${ONEC_USERNAME} \
@@ -48,12 +50,17 @@ server-nls:
 	docker tag ${DOCKER_REGISTRY_URL}/onec-server-nls:${ONEC_VERSION} ${DOCKER_REGISTRY_URL}/onec-server-nls:latest
 
 client:
-	docker build --build-arg ONEC_USERNAME=${ONEC_USERNAME} \
+	make yard
+
+	docker build \
+		--build-arg ONEC_USERNAME=${ONEC_USERNAME} \
 		--build-arg ONEC_PASSWORD=${ONEC_PASSWORD} \
 		--build-arg ONEC_VERSION=${ONEC_VERSION} \
+		--build-arg DOWNLOADER_IMAGE=${DOCKER_REGISTRY_URL}/oscript-downloader:yard \
 		-t ${DOCKER_REGISTRY_URL}/onec-client:${ONEC_VERSION} \
 		-f client/Dockerfile .
-	docker tag ${DOCKER_REGISTRY_URL}/onec-client:${ONEC_VERSION} ${DOCKER_REGISTRY_URL}/onec-client:latest
+	
+	# docker tag ${DOCKER_REGISTRY_URL}/onec-client:${ONEC_VERSION} ${DOCKER_REGISTRY_URL}/onec-client:latest
 
 client-vnc:
 	docker build --build-arg DOCKER_REGISTRY_URL=${DOCKER_REGISTRY_URL} \
@@ -111,11 +118,10 @@ gitsync:
 	docker tag ${DOCKER_REGISTRY_URL}/gitsync:3.0.0 ${DOCKER_REGISTRY_URL}/gitsync:latest
 
 oscript:
-	docker build --build-arg DOCKER_REGISTRY_URL=${DOCKER_REGISTRY_URL} \
-		--build-arg ONEC_VERSION=${ONEC_VERSION} \
-		-t ${DOCKER_REGISTRY_URL}/oscript:1.0.21 \
+	docker build \
+		--build-arg ONESCRIPT_VERSION=${ONESCRIPT_VERSION} \
+		-t ${DOCKER_REGISTRY_URL}/oscript:${ONESCRIPT_VERSION} \
 		-f oscript/Dockerfile .
-	docker tag ${DOCKER_REGISTRY_URL}/oscript:1.0.21 ${DOCKER_REGISTRY_URL}/oscript:latest
 
 oscript-utils:
 	docker build --build-arg DOCKER_REGISTRY_URL=${DOCKER_REGISTRY_URL} \
@@ -123,7 +129,10 @@ oscript-utils:
 		-f oscript-utils/Dockerfile .
 
 runner:
-	docker build --build-arg DOCKER_REGISTRY_URL=${DOCKER_REGISTRY_URL} \
-		-t ${DOCKER_REGISTRY_URL}/runner:1.7.0 \
-		-f vanessa-runner/Dockerfile .
-	docker tag ${DOCKER_REGISTRY_URL}/runner:1.7.0 ${DOCKER_REGISTRY_URL}/runner:latest
+	docker build \
+		--build-arg BASE_IMAGE=${DOCKER_REGISTRY_URL}/onec-server:${ONEC_VERSION} \
+		--build-arg ONESCRIPT_VERSION=${ONESCRIPT_VERSION} \
+		--build-arg ONESCRIPT_PACKAGES="vanessa-runner@2.2.2 add" \
+		-t ${DOCKER_REGISTRY_URL}/vanessa-runner:2.2.2 \
+		-f oscript/Dockerfile \
+		"."

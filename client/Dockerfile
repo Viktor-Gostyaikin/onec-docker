@@ -1,8 +1,9 @@
 # Используем базовый образ для скачивания
 ARG DOCKER_REGISTRY_URL
-ARG BASE_IMAGE
-ARG BASE_TAG
-FROM ${DOCKER_REGISTRY_URL}/${BASE_IMAGE}:${BASE_TAG} as downloader
+ARG DOWNLOADER_IMAGE
+ARG ONEC_VERSION
+
+FROM ${DOWNLOADER_IMAGE} as downloader
 
 # Копирование скрипта скачивания и локальных дистрибутивов
 COPY ./scripts/download_yard.sh /download.sh
@@ -70,6 +71,7 @@ COPY ./configs/client/current/ /opt/1cv8/current/
 FROM ubuntu:18.04
 LABEL maintainer="Anton Kvashenkin <anton.jugatsu@gmail.com> (@jugatsu)"
 
+ARG ONEC_VERSION
 ARG onec_uid="999"
 ARG onec_gid="999"
 
@@ -78,24 +80,38 @@ COPY --from=base /opt /opt
 RUN set -xe \
   && chmod 777 -R /tmp \
   && apt-get update \
-  && echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | debconf-set-selections \
-  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-      locales \
-      ca-certificates \
-      libgtk2.0-0 \
-      libwebkitgtk-3.0-0 \
-      ttf-mscorefonts-installer \
-      libfontconfig1 \
-      libgsf-1-114 \
-      libglib2.0-0 \
-      libodbc1 \
-      libmagickwand-6.q16-3 \
-      dbus-x11 \
-  && rm -rf  \
-    /var/lib/apt/lists/* \
-    /var/cache/debconf \
+  && echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | debconf-set-selections
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get install -y --no-install-recommends \
+  ca-certificates \
+  libgtk2.0-0 \
+  libwebkitgtk-3.0-0 \
+  libfontconfig1 \
+  libgsf-1-114 \
+  libglib2.0-0 \
+  libmagickwand-6.q16-3 \
+  dbus-x11 \
+  at-spi2-core \
+  && apt-get clean
+
+RUN apt-get install -y --no-install-recommends \
+  locales \
+  && apt-get clean \
   && localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8
 ENV LANG ru_RU.UTF-8
+
+RUN apt-get install -y --no-install-recommends \
+  libodbc1 \  
+  libkrb5-dev \
+  libgssapi-krb5-2 \
+  ttf-mscorefonts-installer \
+  && apt-get clean
+
+RUN apt-get install -y --no-install-recommends \
+  xvfb \
+  && apt-get clean
+RUN mkdir -p /tmp/.X11-unix && chmod 1777 /tmp/.X11-unix
 
 RUN groupadd -r grp1cv8 --gid=$onec_gid \
   && useradd -r -g grp1cv8 --uid=$onec_uid --home-dir=/home/usr1cv8 --shell=/bin/bash usr1cv8 \
@@ -106,4 +122,9 @@ VOLUME /home/usr1cv8/.1cv8/
 
 USER usr1cv8
 
-CMD ["/opt/1C/v8.3/x86_64/1cv8"]
+ENV ONEC_VERSION=$ONEC_VERSION
+RUN echo 'export PATH=$PATH:/opt/1cv8/x86_64/${ONEC_VERSION}' >> ~/.bashrc
+
+ENV DISPLAY=:99
+
+ENTRYPOINT /bin/bash -c "Xvfb ${DISPLAY} -ac & /bin/bash"
