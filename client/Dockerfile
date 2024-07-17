@@ -35,7 +35,7 @@ ENV LC_ALL ru_RU.UTF-8
 RUN /download.sh "$ONEC_USERNAME" "$ONEC_PASSWORD" "$ONEC_VERSION" "client"
 
 # Начало основной стадии сборки
-FROM ubuntu:18.04 as base
+FROM ubuntu:20.04 as base
 
 # Копируем скрипты и файлы установки
 ARG ONEC_VERSION
@@ -45,11 +45,11 @@ ENV nls=$nls_enabled
 ENV distrPath=/tmp/downloads/Platform83/${ONEC_VERSION}
 ENV installer_type=client
 
-RUN set -xe \
-  && chmod 777 -R /tmp \
-  && apt-get update \
-  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-      libwebkitgtk-3.0-0
+# RUN set -xe \
+#   && chmod 777 -R /tmp \
+#   && apt-get update \
+#   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+#       libwebkit2gtk
 
 COPY ./scripts/install_new.sh /install.sh
 COPY --from=downloader /tmp/ /tmp/
@@ -68,7 +68,7 @@ RUN chmod +x /create-symlink-to-current-1cv8.sh \
 
 COPY ./configs/client/current/ /opt/1cv8/current/
 
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 LABEL maintainer="Anton Kvashenkin <anton.jugatsu@gmail.com> (@jugatsu)"
 
 ARG ONEC_VERSION
@@ -86,14 +86,17 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get install -y --no-install-recommends \
   ca-certificates \
   libgtk2.0-0 \
-  libwebkitgtk-3.0-0 \
+  libwebkit2gtk-4.0-37 \
   libfontconfig1 \
   libgsf-1-114 \
   libglib2.0-0 \
-  libmagickwand-6.q16-3 \
+  libmagickwand-6.q16-6 \
+  libenchant-2-2 \
   dbus-x11 \
   at-spi2-core \
   && apt-get clean
+
+RUN ln -s /usr/lib/x86_64-linux-gnu/libenchant-2.so.2 /usr/lib/libenchant.so.1
 
 RUN apt-get install -y --no-install-recommends \
   locales \
@@ -120,10 +123,10 @@ RUN groupadd -r grp1cv8 --gid=$onec_gid \
 
 VOLUME /home/usr1cv8/.1cv8/
 
-USER usr1cv8
-
 ENV ONEC_VERSION=$ONEC_VERSION
 RUN echo 'export PATH=$PATH:/opt/1cv8/x86_64/${ONEC_VERSION}' >> ~/.bashrc
+
+RUN echo "DisableUnsafeActionProtection=.*" >> /opt/1cv8/x86_64/${ONEC_VERSION}/conf/conf.cfg
 
 ENV DISPLAY=:99
 

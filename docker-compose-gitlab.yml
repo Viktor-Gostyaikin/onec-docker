@@ -1,0 +1,16 @@
+#!docker/dockerfile
+
+version: '3.3'
+
+services:
+  edt-job:
+    image: cr.selcloud.ru/itworks/edt:2023.3.5
+    # restart: always
+    volumes:
+      - /home/v.gostyaikin/itworks/projects/ssl:/builds/mis/ssl
+  1c-job:
+    image: cr.selcloud.ru/itworks/vanessa-runner:2.2.2
+    # restart: always
+    volumes:
+      - /home/v.gostyaikin/itworks/projects/ssl:/builds/mis/ssl
+    # entrypoint: ["bash"]

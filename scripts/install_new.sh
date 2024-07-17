@@ -60,7 +60,7 @@ install_from_run() {
         run_components="server,ws,config_storage_server,$nls_install"
         ;;
       client)
-        run_components="server,client_full,$nls_install"
+        run_components="server,ws,client_full,$nls_install"
         ;;
       client32)
         run_components="server,client_full,$nls_install"

@@ -129,10 +129,11 @@ oscript-utils:
 		-f oscript-utils/Dockerfile .
 
 runner:
+	make client
+
 	docker build \
-		--build-arg BASE_IMAGE=${DOCKER_REGISTRY_URL}/onec-server:${ONEC_VERSION} \
+		--build-arg BASE_IMAGE=${DOCKER_REGISTRY_URL}/onec-client:${ONEC_VERSION} \
 		--build-arg ONESCRIPT_VERSION=${ONESCRIPT_VERSION} \
-		--build-arg ONESCRIPT_PACKAGES="vanessa-runner@2.2.2 add" \
-		-t ${DOCKER_REGISTRY_URL}/vanessa-runner:2.2.2 \
-		-f oscript/Dockerfile \
+		-t ${DOCKER_REGISTRY_URL}/vanessa-runner:2.2.22 \
+		-f vanessa-runner/Dockerfile \
 		"."
