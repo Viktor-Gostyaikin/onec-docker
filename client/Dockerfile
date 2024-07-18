@@ -124,13 +124,8 @@ RUN groupadd -r grp1cv8 --gid=$onec_gid \
 VOLUME /home/usr1cv8/.1cv8/
 
 ENV ONEC_VERSION=$ONEC_VERSION
-
-RUN echo export PATH=$PATH:/opt/1cv8/x86_64/${ONEC_VERSION} >> ~/.bashrc
-
-RUN echo "DisableUnsafeActionProtection=.*" >> /opt/1cv8/x86_64/${ONEC_VERSION}/conf/conf.cfg
+ENV PATH=$PATH:/opt/1cv8/x86_64/${ONEC_VERSION}
 
 ENV DISPLAY=:99
-RUN echo export DISPLAY=${DISPLAY} >> ~/.bashrc \
-  && echo "Xvfb :99 -ac &" >> ~/.bashrc
 
-ENTRYPOINT /bin/bash
+ENTRYPOINT ["/bin/sh", "-c", "/usr/bin/Xvfb $DISPLAY -ac & /bin/bash"]
